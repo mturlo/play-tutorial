@@ -2,10 +2,11 @@ package service
 
 import javax.inject.Singleton
 
+import anorm.SqlParser._
+import anorm._
 import model.Task
-
-import scala.collection.mutable
-import scala.util.Random
+import play.api.Play.current
+import play.api.db.DB
 
 /**
   * Created by mactur on 01/03/16.
@@ -13,23 +14,33 @@ import scala.util.Random
 @Singleton
 class TaskService {
 
-  private val sampleTasks = mutable.MutableList(
-    Task(1, "Task one"),
-    Task(2, "Task two")
-  )
-
-  def getAll: List[Task] = {
-    sampleTasks.toList
+  val task: RowParser[Task] = {
+    get[Long]("id") ~
+      get[String]("label") map {
+      case id ~ label => Task(id, label)
+    }
   }
 
-  def create(label: String): Task = {
-    val newTask = Task(Random.nextInt(), label)
-    sampleTasks += newTask
-    newTask
+  def getAll: List[Task] = {
+    DB.withConnection { implicit c =>
+      SQL("select * from task").as(task *)
+    }
+  }
+
+  def create(label: String): Unit = {
+    DB.withConnection { implicit c =>
+      SQL("insert into task (label) values ({label})").on(
+        'label -> label
+      ).executeUpdate()
+    }
   }
 
   def delete(id: Long): Unit = {
-    ???
+    DB.withConnection { implicit c =>
+      SQL("delete from task where id = {id}").on(
+        'id -> id
+      ).executeUpdate()
+    }
   }
 
 }

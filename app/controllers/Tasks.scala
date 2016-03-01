@@ -13,7 +13,7 @@ import service.TaskService
   * Created by mactur on 01/03/16.
   */
 @Singleton
-class Tasks @Inject() (taskService: TaskService) extends Controller {
+class Tasks @Inject()(taskService: TaskService) extends Controller {
 
   val taskForm = Form(
     "label" -> nonEmptyText
@@ -33,6 +33,9 @@ class Tasks @Inject() (taskService: TaskService) extends Controller {
     )
   }
 
-  def deleteTask(id: Long) = TODO
+  def deleteTask(id: Long) = Action {
+    taskService.delete(id)
+    Redirect(routes.Tasks.listTasks)
+  }
 
 }
