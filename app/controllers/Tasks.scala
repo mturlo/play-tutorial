@@ -1,38 +1,33 @@
 package controllers
 
-import model.Task
+import javax.inject.{Inject, Singleton}
+
 import play.api.data.Forms._
 import play.api.data._
 import play.api.mvc._
 import play.api.Play.current
 import play.api.i18n.Messages.Implicits._
-
-import scala.collection.mutable
-import scala.util.Random
+import service.TaskService
 
 /**
   * Created by mactur on 01/03/16.
   */
-class Tasks extends Controller {
+@Singleton
+class Tasks @Inject() (taskService: TaskService) extends Controller {
 
   val taskForm = Form(
     "label" -> nonEmptyText
   )
 
-  val sampleTasks = mutable.MutableList(
-    Task(1, "Task one"),
-    Task(2, "Task two")
-  )
-
   def listTasks = Action {
-    Ok(views.html.tasks(sampleTasks.toList, taskForm))
+    Ok(views.html.tasks(taskService.getAll, taskForm))
   }
 
-  def createTask = Action {implicit request =>
+  def createTask = Action { implicit request =>
     taskForm.bindFromRequest.fold(
-      errors => BadRequest(views.html.tasks(sampleTasks.toList, errors)),
+      errors => BadRequest(views.html.tasks(taskService.getAll, errors)),
       label => {
-        sampleTasks += Task(Random.nextInt(), label)
+        taskService.create(label)
         Redirect(routes.Tasks.listTasks)
       }
     )
